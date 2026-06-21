@@ -1,0 +1,406 @@
+<%- include('partials/head', { pageTitle: 'Style Muse | HERSTYLE', bodyClass: 'stylist-page' }) %>
+<%- include('partials/header') %>
+
+<div class="stylist-layout" id="stylistLayout">
+  <div class="stylist-bg" aria-hidden="true">
+    <span class="stylist-orb stylist-orb-1"></span>
+    <span class="stylist-orb stylist-orb-2"></span>
+    <span class="stylist-orb stylist-orb-3"></span>
+  </div>
+
+  <aside class="stylist-features-col" id="featuresCol">
+    <div class="feature-card">
+      <span class="feature-icon">✦</span>
+      <h3>Personal picks</h3>
+      <p>Outfits matched to your occasion, budget & style.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">👗</span>
+      <h3>Complete looks</h3>
+      <p>Get 2–4 coordinated pieces — add the full outfit in one tap.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">💬</span>
+      <h3>Refine anytime</h3>
+      <p>Say "cheaper", "in blue", or "more casual" to adjust picks.</p>
+    </div>
+    <div class="feature-card feature-card-accent">
+      <p class="feature-stat"><strong>8</strong> collections</p>
+      <p class="feature-stat-sub">Casual · Formal · Traditional · Party & more</p>
+    </div>
+  </aside>
+
+  <section class="stylist-main">
+    <div class="stylist-hero">
+      <div class="stylist-hero-text">
+        <span class="stylist-badge">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M12 2l1.4 4.3L18 8l-4.6 1.7L12 14l-1.4-4.3L6 8l4.6-1.7L12 2z" fill="currentColor"/>
+            <path d="M19 14l.8 2.5L22 17l-2.2.8L19 20l-.8-2.2L16 17l2.2-.5L19 14z" fill="currentColor" opacity=".7"/>
+          </svg>
+          Powered by AI
+        </span>
+        <h1 class="page-title">Style <em>Muse</em></h1>
+        <p class="ai-subtitle">Your personal fashion companion — ask follow-ups like <strong>"show something cheaper"</strong> or <strong>"in blue instead"</strong>.</p>
+      </div>
+      <div class="stylist-hero-stats" aria-hidden="true">
+        <div class="hero-stat"><strong>2–4</strong><span>Outfit picks</span></div>
+        <div class="hero-stat"><strong>24/7</strong><span>Styling help</span></div>
+        <div class="hero-stat"><strong>1-tap</strong><span>Add to cart</span></div>
+      </div>
+    </div>
+
+    <div class="login-prompt" id="loginPrompt" hidden>
+      <span class="login-prompt-icon" aria-hidden="true">🔐</span>
+      <p>Please <a href="/login">sign in</a> or <a href="/signin">create an account</a> to chat with Style Muse.</p>
+    </div>
+
+    <div class="stylist-chat-panel">
+      <div class="chat-panel-header">
+        <div class="chat-panel-title">
+          <span class="ai-status-dot" aria-hidden="true"></span>
+          Style Muse
+        </div>
+        <button type="button" id="newChatBtn" class="stylist-new-chat" hidden>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          New chat
+        </button>
+      </div>
+
+      <div class="presets-grid">
+        <div class="occasion-strip">
+          <p class="examples-label">Shop by occasion</p>
+          <div class="occasion-presets">
+            <button type="button" class="occasion-btn" data-icon="💒" data-prompt="Build me a complete wedding look — elegant dress and coordinated pieces under ₹15000">Wedding</button>
+            <button type="button" class="occasion-btn" data-icon="💼" data-prompt="Complete the look for office — professional formal outfit under ₹8000">Office</button>
+            <button type="button" class="occasion-btn" data-icon="🎉" data-prompt="Complete party wear look — bold and glamorous under ₹10000">Party</button>
+            <button type="button" class="occasion-btn" data-icon="🌹" data-prompt="Complete a romantic date night look — chic and feminine under ₹7000">Date Night</button>
+          </div>
+        </div>
+
+        <div class="examples-strip">
+          <p class="examples-label">Quick prompts</p>
+          <div class="examples">
+            <button type="button" class="example-btn" data-icon="👗" data-prompt="Red lehenga for a wedding">Red lehenga for a wedding</button>
+            <button type="button" class="example-btn" data-icon="💼" data-prompt="Black formal suit for office">Black formal suit for office</button>
+            <button type="button" class="example-btn" data-icon="💰" data-prompt="Show something under ₹5000">Show something under ₹5000</button>
+            <button type="button" class="example-btn" data-icon="✨" data-prompt="Something more casual please">Something more casual please</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="chat-box" id="chatBox">
+        <div class="chat-msg ai">
+          <div class="chat-msg-avatar" aria-hidden="true">✦</div>
+          <div class="chat-msg-body">
+            <strong>Style Muse</strong>
+            <p>Hello! I'm Style Muse — your personal fashion guide. Tell me what you're looking for, and feel free to refine with follow-ups like "cheaper options" or "in navy blue".</p>
+          </div>
+        </div>
+      </div>
+
+      <form id="aiForm" class="chat-input-row">
+        <div class="chat-input-wrap">
+          <input type="text" id="queryInput" placeholder="Describe or refine your search..." autocomplete="off" disabled>
+          <button type="submit" id="submitBtn" disabled aria-label="Send message">
+            <svg class="send-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="send-label">Send</span>
+          </button>
+        </div>
+      </form>
+      <p class="error-msg" id="errorMsg" hidden></p>
+    </div>
+  </section>
+
+  <aside class="stylist-sidebar" id="historyPanel" hidden>
+    <div class="sidebar-head">
+      <h2>Chat History</h2>
+      <span class="sidebar-count" id="historyCount"></span>
+    </div>
+    <div id="historyList" class="history-list"></div>
+    <div class="sidebar-tips" id="sidebarTips">
+      <p class="sidebar-tips-label">Style tips</p>
+      <ul>
+        <li>Mention your budget — "under ₹5000"</li>
+        <li>Refine with color — "in navy blue"</li>
+        <li>Try occasion presets for full outfits</li>
+      </ul>
+      <a href="/search" class="sidebar-shop-link">Browse all dresses →</a>
+    </div>
+  </aside>
+</div>
+<%- include('partials/footer') %>
+<script src="/js/app.js"></script>
+<script>
+const form = document.getElementById('aiForm');
+const input = document.getElementById('queryInput');
+const chatBox = document.getElementById('chatBox');
+const errorMsg = document.getElementById('errorMsg');
+const submitBtn = document.getElementById('submitBtn');
+const loginPrompt = document.getElementById('loginPrompt');
+const historyPanel = document.getElementById('historyPanel');
+const historyList = document.getElementById('historyList');
+const historyCount = document.getElementById('historyCount');
+const stylistLayout = document.getElementById('stylistLayout');
+const featuresCol = document.getElementById('featuresCol');
+const newChatBtn = document.getElementById('newChatBtn');
+
+const WELCOME_HTML = `<div class="chat-msg ai">
+  <div class="chat-msg-avatar" aria-hidden="true">✦</div>
+  <div class="chat-msg-body">
+    <strong>Style Muse</strong>
+    <p>Hello! I'm Style Muse — your personal fashion guide. Tell me what you're looking for, and feel free to refine with follow-ups like "cheaper options" or "in navy blue".</p>
+  </div>
+</div>`;
+
+let sessionId = sessionStorage.getItem('stylist_session') || null;
+
+function setLayoutMode(loggedIn) {
+  stylistLayout.classList.toggle('is-logged-in', loggedIn);
+}
+
+function setHistoryVisible(visible) {
+  stylistLayout.classList.toggle('with-history', visible);
+}
+
+function escapeHtml(text) {
+  const d = document.createElement('div');
+  d.textContent = text;
+  return d.innerHTML;
+}
+
+function renderProductCards(products, opts = {}) {
+  if (!products.length) return '';
+  const { outfitBundle = false, outfitName = 'Complete the Look' } = opts;
+  const ids = products.map(p => String(p.id || p.productId).replace(/\\/g, '\\\\').replace(/'/g, "\\'"));
+
+  const bundleBtn = outfitBundle && products.length >= 2
+    ? `<div class="outfit-bundle-bar">
+        <div>
+          <p class="outfit-bundle-label">${escapeHtml(outfitName)}</p>
+          <p class="outfit-bundle-sub">${products.length} pieces · Add the full outfit to cart</p>
+        </div>
+        <button type="button" class="btn-sm btn-dark outfit-bundle-btn" onclick="addCompleteLook(['${ids.join("','")}'])">Add Complete Look</button>
+      </div>`
+    : '';
+
+  return `${bundleBtn}<div class="chat-products">${products.map(p => {
+    const id = p.id || p.productId;
+    return `
+    <div class="product-card-ai chat-inline-card">
+      <div class="chat-product-img-wrap">
+        <img src="${p.image}" alt="${escapeHtml(p.name)}" loading="lazy">
+      </div>
+      <div class="info">
+        <h3>${escapeHtml(p.name)}</h3>
+        <p class="price">₹${p.price.toLocaleString('en-IN')}</p>
+        <p class="reason">${escapeHtml(p.reason || '')}</p>
+        <div class="shop-card-actions">
+          <a href="/product/${p.slug}">View</a>
+          <button type="button" class="btn-sm btn-dark" onclick="addToCart('${id}',1,{size:'M'}).then(()=>showToast('Added!','success')).catch(e=>showToast(e.message,'error'))">Cart</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+async function addCompleteLook(productIds) {
+  try {
+    const res = await authFetch('/api/cart/bundle', {
+      method: 'POST',
+      body: JSON.stringify({ productIds, size: 'M' }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Could not add outfit');
+    updateNavBadges();
+    showToast(data.message || 'Complete look added to cart!', 'success');
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+function appendUserMsg(text) {
+  chatBox.innerHTML += `<div class="chat-msg user">
+    <div class="chat-msg-body"><span>${escapeHtml(text)}</span></div>
+  </div>`;
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+function appendAiMsg(message, products, opts = {}) {
+  const normalized = (products || []).map(p => ({
+    ...p,
+    id: p.id || p.productId,
+  }));
+  const outfitBundle = opts.outfitBundle || normalized.length >= 2;
+  chatBox.innerHTML += `<div class="chat-msg ai">
+    <div class="chat-msg-avatar" aria-hidden="true">✦</div>
+    <div class="chat-msg-body">
+      <strong>Style Muse</strong>
+      <p>${escapeHtml(message)}</p>
+      ${renderProductCards(normalized, { outfitBundle, outfitName: opts.outfitName || 'Complete the Look' })}
+    </div>
+  </div>`;
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+function showTyping() {
+  removeTyping();
+  chatBox.innerHTML += `<div class="chat-msg ai typing" id="typingIndicator">
+    <div class="chat-msg-avatar" aria-hidden="true">✦</div>
+    <div class="chat-msg-body">
+      <strong>Style Muse</strong>
+      <div class="typing-dots" aria-label="Style Muse is thinking"><span></span><span></span><span></span></div>
+    </div>
+  </div>`;
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+function removeTyping() {
+  document.getElementById('typingIndicator')?.remove();
+}
+
+function resetChat() {
+  sessionId = null;
+  sessionStorage.removeItem('stylist_session');
+  chatBox.innerHTML = WELCOME_HTML;
+}
+
+async function checkAuth() {
+  if (!getToken()) {
+    loginPrompt.hidden = false;
+    input.disabled = true;
+    submitBtn.disabled = true;
+    newChatBtn.hidden = true;
+    historyPanel.hidden = true;
+    setLayoutMode(false);
+    stylistLayout.classList.remove('with-history');
+    return;
+  }
+  try {
+    const res = await authFetch('/api/auth/me');
+    if (!res.ok) throw new Error();
+    loginPrompt.hidden = true;
+    input.disabled = false;
+    submitBtn.disabled = false;
+    newChatBtn.hidden = false;
+    setLayoutMode(true);
+    historyPanel.hidden = false;
+    loadSessions();
+    if (sessionId) loadSession(sessionId);
+  } catch {
+    localStorage.removeItem('herstyle_jwt');
+    checkAuth();
+  }
+}
+
+async function loadSessions() {
+  try {
+    const res = await authFetch('/api/ai/sessions');
+    const sessions = await res.json();
+    if (!sessions.length) {
+      historyList.innerHTML = '<p class="history-empty">No past chats yet. Pick an occasion or type a message to start.</p>';
+      historyCount.textContent = '0';
+      stylistLayout.classList.remove('with-history');
+      return;
+    }
+    setHistoryVisible(true);
+    historyCount.textContent = sessions.length;
+    historyList.innerHTML = sessions.map(s => `
+      <button type="button" class="history-btn ${s.id === sessionId ? 'active' : ''}" data-id="${s.id}">
+        <p class="query">${escapeHtml(s.title)}</p>
+        <p class="history-meta">${s.messageCount} messages · ${new Date(s.updatedAt).toLocaleDateString('en-IN')}</p>
+      </button>`).join('');
+
+    historyList.querySelectorAll('.history-btn').forEach(btn => {
+      btn.onclick = () => loadSession(btn.dataset.id);
+    });
+  } catch {
+    historyList.innerHTML = '<p class="history-empty">Could not load history.</p>';
+  }
+}
+
+async function loadSession(id) {
+  try {
+    const res = await authFetch('/api/ai/sessions/' + id);
+    const session = await res.json();
+    sessionId = session.id;
+    sessionStorage.setItem('stylist_session', sessionId);
+    chatBox.innerHTML = '';
+    session.messages.forEach(m => {
+      if (m.role === 'user') appendUserMsg(m.content);
+      else appendAiMsg(m.content, m.products, { outfitBundle: (m.products || []).length >= 2 });
+    });
+    loadSessions();
+  } catch {
+    showToast('Could not load chat', 'error');
+  }
+}
+
+document.querySelectorAll('.example-btn, .occasion-btn').forEach(btn => {
+  const icon = btn.dataset.icon || '';
+  const label = btn.dataset.label || btn.textContent.trim();
+  const prompt = btn.dataset.prompt || label;
+  if (icon) {
+    btn.innerHTML = `<span class="example-icon">${icon}</span><span class="preset-label">${escapeHtml(label)}</span>`;
+  }
+  btn.addEventListener('click', () => {
+    if (!input.disabled) {
+      document.querySelectorAll('.example-btn, .occasion-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      input.value = prompt;
+      form.dispatchEvent(new Event('submit'));
+    }
+  });
+});
+
+newChatBtn.onclick = () => {
+  resetChat();
+  document.querySelectorAll('.example-btn, .occasion-btn').forEach(b => b.classList.remove('active'));
+  loadSessions();
+};
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const message = input.value.trim();
+  if (!message || !getToken()) return;
+
+  errorMsg.hidden = true;
+  submitBtn.disabled = true;
+  submitBtn.classList.add('is-loading');
+  appendUserMsg(message);
+  input.value = '';
+  showTyping();
+
+  try {
+    const res = await authFetch('/api/ai/chat', {
+      method: 'POST',
+      body: JSON.stringify({ sessionId, message }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Something went wrong');
+
+    removeTyping();
+    sessionId = data.sessionId;
+    sessionStorage.setItem('stylist_session', sessionId);
+    appendAiMsg(data.message, data.products, {
+      outfitBundle: data.outfitBundle,
+      outfitName: data.outfitName || 'Complete the Look',
+    });
+    loadSessions();
+  } catch (err) {
+    removeTyping();
+    errorMsg.textContent = err.message;
+    errorMsg.hidden = false;
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.classList.remove('is-loading');
+  }
+});
+
+checkAuth();
+</script>
+<%- include('partials/end') %>

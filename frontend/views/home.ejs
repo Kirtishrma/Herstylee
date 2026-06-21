@@ -1,0 +1,321 @@
+<%- include('partials/head', { pageTitle: 'HERSTYLE | Premium Women\'s Fashion' }) %>
+
+<%- include('partials/header') %>
+<!-- HERO -->
+
+<section class="hero">
+
+    <div class="hero-overlay"></div>
+
+    <div class="hero-content">
+
+        <span class="hero-tag">
+            NEW SEASON ARRIVALS
+        </span>
+
+        <h1>
+            Fashion Designed <br>
+            For Modern Women
+        </h1>
+
+        <p>
+            Discover timeless collections curated for
+            elegance, confidence and everyday luxury.
+        </p>
+
+        <a href="#collections" class="hero-btn">
+            Explore Collection
+        </a>
+
+    </div>
+
+</section>
+<section class="ai-preview">
+
+    <div class="ai-preview-content">
+
+        <div class="ai-left">
+
+            <span>STYLE MUSE</span>
+
+            <h2>
+                Meet Your Personal
+                Style Muse
+            </h2>
+
+            <p>
+                Get personalized outfit recommendations
+                based on your style, occasion, season,
+                and preferences.
+            </p>
+
+            <a href="/stylist" class="ai-btn">
+                Meet Style Muse
+            </a>
+
+        </div>
+
+        <div class="ai-right">
+
+            <div class="ai-card">
+
+                <h3>Style Analysis</h3>
+
+                <p>
+                    Discover your fashion personality
+                    and receive curated outfit suggestions.
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+<!-- COLLECTIONS -->
+
+<section class="collections" id="collections">
+
+    <div class="section-heading">
+
+        <span>SHOP BY COLLECTION</span>
+
+        <h2>Explore Our Categories</h2>
+
+    </div>
+
+    <div class="collection-grid">
+
+        <a href="/casual" class="collection-card">
+            <img src="/images/casual/c.jpg">
+            <div class="overlay">
+                <h3>Casual</h3>
+            </div>
+        </a>
+
+        <a href="/formals" class="collection-card">
+            <img src="/images/formals/f.jpg">
+            <div class="overlay">
+                <h3>Formal</h3>
+            </div>
+        </a>
+
+        <a href="/night" class="collection-card">
+            <img src="/images/night/n.jpg">
+            <div class="overlay">
+                <h3>Night Wear</h3>
+            </div>
+        </a>
+
+        <a href="/party" class="collection-card">
+            <img src="/images/party-western/p.jpg">
+            <div class="overlay">
+                <h3>Party Wear</h3>
+            </div>
+        </a>
+
+        <a href="/traditional" class="collection-card">
+            <img src="/images/traditional/t.jpg">
+            <div class="overlay">
+                <h3>Traditional</h3>
+            </div>
+        </a>
+
+        <a href="/spring" class="collection-card">
+            <img src="/images/spring/s.jpg">
+            <div class="overlay">
+                <h3>Spring</h3>
+            </div>
+        </a>
+
+        <a href="/summer" class="collection-card">
+            <img src="/images/summer/s.jpg">
+            <div class="overlay">
+                <h3>Summer</h3>
+            </div>
+        </a>
+
+        <a href="/winter" class="collection-card">
+            <img src="/images/winter/w.jpg">
+            <div class="overlay">
+                <h3>Winter</h3>
+            </div>
+        </a>
+
+    </div>
+
+</section>
+
+<!-- RECENTLY VIEWED -->
+<section class="recently-section" id="recentlySection" hidden>
+  <div class="featured-top">
+    <div class="section-heading featured-heading">
+      <span>JUST FOR YOU</span>
+      <h2>You Recently Saw</h2>
+      <p class="featured-sub">Pick up where you left off.</p>
+    </div>
+  </div>
+  <div class="catalog-grid" id="recentlyGrid"></div>
+</section>
+
+<!-- PREVIOUSLY PURCHASED -->
+<section class="recently-section purchased-section" id="purchasedSection" hidden>
+  <div class="featured-top">
+    <div class="section-heading featured-heading">
+      <span>ORDER AGAIN</span>
+      <h2>Previously Purchased</h2>
+      <p class="featured-sub">Your past favourites — ready to shop again.</p>
+    </div>
+    <a href="/orders" class="featured-view-all">View Orders →</a>
+  </div>
+  <div class="catalog-grid" id="purchasedGrid"></div>
+</section>
+
+<!-- FEATURED -->
+
+<section class="featured-section" id="featured">
+
+    <div class="featured-top">
+        <div class="section-heading featured-heading">
+            <span>CURATED PICKS</span>
+            <h2>Featured Products</h2>
+            <p class="featured-sub">Handpicked styles from every collection — limited picks updated weekly.</p>
+        </div>
+        <a href="/search" class="featured-view-all">View All Products →</a>
+    </div>
+
+    <div class="featured-grid">
+
+        <% if (typeof featured !== 'undefined' && featured.length) { %>
+        <% featured.forEach(function(p, index) { %>
+        <article class="featured-card">
+            <div class="featured-card-media">
+                <a href="/product/<%= p.slug %>" class="featured-img-link">
+                    <img src="<%= p.image %>" alt="<%= p.name %>" loading="lazy">
+                </a>
+                <% if (index === 0) { %><span class="featured-badge">Bestseller</span><% } %>
+                <% if (index === 2) { %><span class="featured-badge featured-badge-new">New Arrival</span><% } %>
+                <div class="featured-quick-actions">
+                    <button type="button" class="featured-btn-cart" onclick="featuredAddCart('<%= p._id %>', this)">Add to Cart</button>
+                    <button type="button" class="featured-btn-wish" onclick="featuredToggleWish('<%= p._id %>', this)" aria-label="Save to wishlist">♥</button>
+                </div>
+            </div>
+            <div class="featured-card-body">
+                <div class="featured-rating" aria-label="4.8 out of 5 stars">
+                    <span class="stars">★★★★★</span>
+                    <span class="rating-num">4.8</span>
+                </div>
+                <span class="featured-cat"><%= p.category %></span>
+                <h3><a href="/product/<%= p.slug %>"><%= p.name %></a></h3>
+                <div class="featured-price-row">
+                    <p class="featured-price">₹<%= p.price.toLocaleString('en-IN') %></p>
+                    <a href="/product/<%= p.slug %>" class="featured-shop-link">Shop Now</a>
+                </div>
+            </div>
+        </article>
+        <% }); %>
+        <% } else { %>
+        <article class="featured-card">
+            <div class="featured-card-media">
+                <a href="/casual" class="featured-img-link"><img src="/images/casual/c1.jpg" alt="Vintage Street Casual"></a>
+            </div>
+            <div class="featured-card-body">
+                <span class="featured-cat">Casual</span>
+                <h3><a href="/casual">Vintage Street Casual</a></h3>
+                <p class="featured-price">₹1,999</p>
+            </div>
+        </article>
+        <% } %>
+
+    </div>
+
+    <div class="featured-footer-cta">
+        <p>Not sure what to pick? Style Muse can find your perfect outfit.</p>
+        <a href="/stylist" class="featured-ai-btn">Meet Style Muse →</a>
+    </div>
+
+</section>
+
+<!-- BRAND STORY -->
+
+<section class="story">
+
+    <div class="story-content">
+
+        <span>OUR STORY</span>
+
+        <h2>
+            Crafted For Confidence
+        </h2>
+
+        <p>
+            HERSTYLE celebrates individuality through
+            thoughtfully curated fashion collections.
+            From everyday essentials to statement pieces,
+            every design reflects elegance and modern femininity.
+        </p>
+
+    </div>
+
+</section>
+
+<!-- NEWSLETTER -->
+
+<section class="newsletter">
+
+    <h2>Join The HERSTYLE Community</h2>
+
+    <p>
+        Get exclusive access to new collections,
+        styling inspiration and special offers.
+    </p>
+
+    <form id="newsletterForm">
+        <input type="email" name="email" placeholder="Enter your email" required autocomplete="email">
+        <button type="submit">
+            Subscribe
+        </button>
+    </form>
+
+</section>
+
+<%- include('partials/footer') %>
+<script src="/js/app.js"></script>
+<script>
+async function featuredAddCart(productId, btn) {
+  if (!getToken()) {
+    window.location.href = '/login';
+    return;
+  }
+  const label = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Adding...';
+  try {
+    await addToCart(productId, 1, { silent: true });
+    btn.textContent = '✓ Added';
+    showToast('Added to cart!', 'success');
+    setTimeout(() => { btn.textContent = label; btn.disabled = false; }, 1800);
+  } catch (e) {
+    btn.textContent = label;
+    btn.disabled = false;
+    showToast(e.message, 'error');
+  }
+}
+
+async function featuredToggleWish(productId, btn) {
+  if (!getToken()) {
+    window.location.href = '/login';
+    return;
+  }
+  try {
+    const r = await toggleWishlist(productId, { silent: true });
+    btn.classList.toggle('saved', r.added);
+    showToast(r.added ? 'Saved to wishlist!' : 'Removed from wishlist', 'success');
+  } catch (e) {
+    showToast(e.message, 'error');
+  }
+}
+</script>
+<%- include('partials/end') %>

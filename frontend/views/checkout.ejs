@@ -1,0 +1,247 @@
+<%- include('partials/head', { pageTitle: 'Checkout | HERSTYLE' }) %>
+<%- include('partials/header') %>
+<main class="page-shell">
+  <nav class="page-breadcrumb">
+    <a href="/">Home</a><span>/</span><a href="/cart">Cart</a><span>/</span><span>Checkout</span>
+  </nav>
+  <header class="page-head">
+    <span class="page-tag">Checkout</span>
+    <h1>Complete Your Order</h1>
+    <p class="page-sub">Guest checkout available · Apply a coupon · Pay securely via Stripe.</p>
+  </header>
+  <div id="checkoutArea"><p style="color:#888;">Loading...</p></div>
+</main>
+<%- include('partials/footer') %>
+<script src="/js/app.js"></script>
+<script>
+let appliedCoupon = null;
+let cartData = null;
+let isGuest = false;
+let savedAddresses = [];
+
+async function refreshPreview(couponCode) {
+  if (isGuest) {
+    return guestPaymentPreview(couponCode || '');
+  }
+  const url = couponCode
+    ? `/api/payments/preview?coupon=${encodeURIComponent(couponCode)}`
+    : '/api/payments/preview';
+  const res = await authFetch(url);
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.error || 'Invalid coupon');
+  }
+  return res.json();
+}
+
+function fillAddressForm(form, addr) {
+  if (!addr) return;
+  form.fullname.value = addr.fullname || '';
+  form.phone.value = addr.phone || '';
+  form.address.value = addr.address || '';
+  form.city.value = addr.city || '';
+  form.pincode.value = addr.pincode || '';
+}
+
+async function init() {
+  const el = document.getElementById('checkoutArea');
+  const params = new URLSearchParams(location.search);
+  if (params.get('cancelled')) showToast('Payment cancelled. Your cart is still saved.', 'info');
+
+  isGuest = !getToken();
+  let profile = {};
+  let paymentPreview = null;
+
+  if (isGuest) {
+    try {
+      cartData = await fetchGuestCartSummary();
+    } catch (e) {
+      el.innerHTML = `<div class="empty-state"><p>${e.message}</p></div>`;
+      return;
+    }
+    if (!cartData.items.length) {
+      el.innerHTML = '<div class="empty-state"><p>Cart is empty.</p><a href="/search">Shop now →</a></div>';
+      return;
+    }
+    try {
+      paymentPreview = await refreshPreview('');
+    } catch (_) {}
+  } else {
+    const cartRes = await authFetch('/api/cart');
+    cartData = await cartRes.json();
+    if (!cartData.items.length) {
+      el.innerHTML = '<div class="empty-state"><p>Cart is empty.</p><a href="/search">Shop now →</a></div>';
+      return;
+    }
+    try {
+      const profileRes = await authFetch('/api/profile');
+      profile = (await profileRes.json()).user || {};
+      savedAddresses = profile.addresses || [];
+    } catch (_) {}
+    try {
+      paymentPreview = await refreshPreview('');
+    } catch (_) {}
+  }
+
+  renderCheckout(el, cartData, profile, paymentPreview);
+}
+
+function renderCheckout(el, cart, profile, paymentPreview) {
+  const discountLine = paymentPreview?.discount
+    ? `<p style="font-size:14px;color:#2e7d32;">Coupon ${appliedCoupon}: -₹${paymentPreview.discount.toLocaleString('en-IN')}</p>`
+    : '';
+
+  const usdLine = paymentPreview
+    ? `<div class="stripe-conversion-box">
+        <p class="conversion-label">Stripe payment amount</p>
+        <p class="conversion-usd">${paymentPreview.formattedUsd}</p>
+        <p class="conversion-inr">${paymentPreview.formattedInr} INR</p>
+      </div>`
+    : '';
+
+  const guestBanner = isGuest
+    ? `<p class="checkout-guest-note">Checking out as guest — no account needed. We'll email your receipt.</p>`
+    : '';
+
+  const emailField = isGuest
+    ? `<label>Email</label><input name="email" type="email" required placeholder="For order confirmation">`
+    : '';
+
+  const addressPicker = !isGuest && savedAddresses.length
+    ? `<div class="checkout-address-picker">
+        <label>Saved Address</label>
+        <select id="savedAddressSelect">
+          <option value="">Enter manually</option>
+          ${savedAddresses.map(a => `<option value="${a.id}" ${a.isDefault ? 'selected' : ''}>${a.label} — ${a.city}</option>`).join('')}
+        </select>
+        <a href="/profile" class="checkout-manage-address">Manage addresses</a>
+      </div>`
+    : '';
+
+  const loginHint = isGuest
+    ? `<p class="checkout-login-hint">Have an account? <a href="/login?redirect=/checkout">Login</a> for saved addresses.</p>`
+    : '';
+
+  el.innerHTML = `<div class="checkout-layout">
+    <div class="panel checkout-form-wrap">
+      <h2>Shipping Address</h2>
+      ${guestBanner}
+      ${loginHint}
+      <form class="checkout-form" id="checkoutForm">
+        ${emailField}
+        ${addressPicker}
+        <label>Full Name</label><input name="fullname" required>
+        <label>Phone</label><input name="phone" type="tel" required>
+        <label>Address</label><textarea name="address" rows="3" required></textarea>
+        <label>City</label><input name="city" required>
+        <label>Pincode</label><input name="pincode" required pattern="[0-9]{6}">
+        <p id="checkoutError" class="form-error"></p>
+        <button type="submit" class="btn-primary" id="payBtn">
+          Pay with Stripe — ${paymentPreview ? paymentPreview.formattedUsd : 'Continue'}
+        </button>
+        <p class="checkout-stripe-note">Powered by Stripe · Charged in USD</p>
+      </form>
+    </div>
+    <div class="panel checkout-order-summary">
+      <h2>Order Summary</h2>
+      <p>${cart.count} item(s)</p>
+      <p class="total-line" id="summaryTotal">${paymentPreview ? paymentPreview.formattedInr : '₹' + cart.total.toLocaleString('en-IN')}</p>
+      <div id="discountLine">${discountLine}</div>
+      <div class="coupon-box">
+        <label for="couponInput" class="coupon-label">Promo code</label>
+        <div class="coupon-row">
+          <input type="text" id="couponInput" placeholder="e.g. HERSTYLE10" value="${appliedCoupon || ''}" autocomplete="off" spellcheck="false">
+          <button type="button" class="coupon-apply-btn" id="applyCouponBtn">Apply</button>
+        </div>
+        <p id="couponMsg" class="coupon-applied"></p>
+      </div>
+      ${usdLine}
+    </div>
+  </div>`;
+
+  const form = document.getElementById('checkoutForm');
+  form.fullname.value = profile.fullname || '';
+  form.phone.value = profile.phone || '';
+  form.address.value = profile.address || '';
+  form.city.value = profile.city || '';
+  form.pincode.value = profile.pincode || '';
+
+  const savedSelect = document.getElementById('savedAddressSelect');
+  if (savedSelect) {
+    const defaultAddr = savedAddresses.find(a => a.isDefault) || savedAddresses[0];
+    if (defaultAddr) fillAddressForm(form, defaultAddr);
+    savedSelect.onchange = () => {
+      const addr = savedAddresses.find(a => a.id === savedSelect.value);
+      if (addr) fillAddressForm(form, addr);
+    };
+  }
+
+  document.getElementById('applyCouponBtn').onclick = async () => {
+    const code = document.getElementById('couponInput').value.trim();
+    const msgEl = document.getElementById('couponMsg');
+    msgEl.textContent = '';
+    if (!code) { appliedCoupon = null; init(); return; }
+    try {
+      const preview = await refreshPreview(code);
+      appliedCoupon = code.toUpperCase();
+      msgEl.textContent = preview.description || 'Coupon applied!';
+      renderCheckout(el, cart, profile, preview);
+    } catch (e) {
+      msgEl.style.color = '#c0392b';
+      msgEl.textContent = e.message;
+    }
+  };
+
+  form.onsubmit = async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('payBtn');
+    const errEl = document.getElementById('checkoutError');
+    errEl.textContent = '';
+    btn.disabled = true;
+    btn.textContent = 'Redirecting to Stripe...';
+
+    const payload = {
+      fullname: form.fullname.value,
+      phone: form.phone.value,
+      address: form.address.value,
+      city: form.city.value,
+      pincode: form.pincode.value,
+      couponCode: appliedCoupon || undefined,
+    };
+
+    let res, data;
+    if (isGuest) {
+      res = await fetch(apiUrl('/api/guest/payments/create-session'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...payload,
+          email: form.email.value,
+          items: getGuestCart(),
+        }),
+      });
+      data = await res.json();
+      if (res.ok && data.token) {
+        localStorage.setItem('herstyle_jwt', data.token);
+      }
+    } else {
+      res = await authFetch('/api/payments/create-session', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+      data = await res.json();
+    }
+
+    if (!res.ok) {
+      errEl.textContent = data.error || 'Could not start payment';
+      btn.disabled = false;
+      btn.textContent = 'Pay with Stripe';
+      return;
+    }
+    window.location.href = data.url;
+  };
+}
+
+init();
+</script>
+<%- include('partials/end') %>

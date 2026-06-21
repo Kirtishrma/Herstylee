@@ -1,0 +1,24 @@
+<header class="navbar">
+  <a href="/" class="logo">
+    <%- include('logo-icon') %>
+    <span>HERSTYLE</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/">Home</a></li>
+    <li><a href="/search">Shop</a></li>
+    <li><a href="/stylist">Style Muse</a></li>
+    <li>
+      <a href="/wishlist">Wishlist<span class="nav-badge" id="wishBadge" hidden>0</span></a>
+    </li>
+    <li>
+      <a href="/cart">Cart<span class="nav-badge" id="cartBadge" hidden>0</span></a>
+    </li>
+    <% if (typeof user !== 'undefined' && user) { %>
+      <li><a href="/orders">Orders</a></li>
+      <% if (typeof isAdmin !== 'undefined' && isAdmin) { %><li><a href="/admin">Admin</a></li><% } %>
+      <li><a href="/profile" class="account-btn">Profile</a></li>
+    <% } else { %>
+      <li><a href="/login" class="account-btn">Login</a></li>
+    <% } %>
+  </ul>
+</header>

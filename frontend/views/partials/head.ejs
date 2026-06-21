@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title><%= typeof pageTitle !== 'undefined' ? pageTitle : 'HERSTYLE' %></title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/favicon.svg">
+<script>
+window.__API_URL__ = <%- JSON.stringify(typeof apiUrl !== 'undefined' ? apiUrl : '') %>;
+window.__GOOGLE_CLIENT_ID__ = <%- JSON.stringify(typeof googleClientId !== 'undefined' ? googleClientId : '') %>;
+window.__GOOGLE_ENABLED__ = <%- typeof googleEnabled !== 'undefined' && googleEnabled ? 'true' : 'false' %>;
+window.apiUrl = function(path) {
+  var base = (window.__API_URL__ || '').replace(/\/$/, '');
+  var p = path.charAt(0) === '/' ? path : '/' + path;
+  return base ? base + p : p;
+};
+window.setupGoogleAuth = function() {
+  if (!window.__GOOGLE_ENABLED__ && !window.__GOOGLE_CLIENT_ID__) return;
+  var btn = document.getElementById('googleBtn');
+  var divider = document.getElementById('authDivider');
+  if (!btn) return;
+  btn.href = window.apiUrl('/auth/google');
+  btn.hidden = false;
+  if (divider) divider.hidden = false;
+};
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700;800&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/app.css">
+<% if (typeof extraHead !== 'undefined') { %><%- extraHead %><% } %>
+</head>
+<body class="<%= typeof bodyClass !== 'undefined' ? bodyClass : '' %>">

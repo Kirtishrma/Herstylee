@@ -1,0 +1,34 @@
+<%- include('partials/head', { pageTitle: 'About | HERSTYLE' }) %>
+<%- include('partials/header') %>
+
+<main class="page-shell">
+  <nav class="page-breadcrumb">
+    <a href="/">Home</a><span>/</span><span>About</span>
+  </nav>
+  <header class="page-head">
+    <span class="page-tag">About Us</span>
+    <h1>Fashion For The Modern Woman</h1>
+    <p class="page-sub">Premium women's fashion powered by AI styling.</p>
+  </header>
+
+  <div class="panel" style="margin-bottom:24px;">
+    <p style="line-height:1.9;color:#555;margin-bottom:16px;">
+      HERSTYLE is a premium women's fashion platform combining curated collections
+      with AI-powered styling. From casual everyday wear to formal elegance,
+      we help you discover outfits that match your personality, occasion, and season.
+    </p>
+    <p style="line-height:1.9;color:#555;">
+      Tell Style Muse what you need — a wedding lehenga, office formal, or party dress —
+      and get personalized picks from our catalog instantly.
+    </p>
+  </div>
+
+  <div class="catalog-grid" style="margin-top:32px;">
+    <a href="/casual" class="catalog-card"><div class="catalog-img-wrap"><img src="/images/casual/c.jpg" alt="Casual"></div><div class="catalog-info"><span class="catalog-cat">Collection</span><h3>Casual</h3></div></a>
+    <a href="/formals" class="catalog-card"><div class="catalog-img-wrap"><img src="/images/formals/f.jpg" alt="Formals"></div><div class="catalog-info"><span class="catalog-cat">Collection</span><h3>Formals</h3></div></a>
+    <a href="/traditional" class="catalog-card"><div class="catalog-img-wrap"><img src="/images/traditional/t.jpg" alt="Traditional"></div><div class="catalog-info"><span class="catalog-cat">Collection</span><h3>Traditional</h3></div></a>
+    <a href="/stylist" class="catalog-card"><div class="catalog-img-wrap" style="background:linear-gradient(135deg,#f3ece3,#e8dfd0);display:flex;align-items:center;justify-content:center;"><span style="font-family:'Playfair Display',serif;font-size:1.5rem;color:#111;">Style Muse</span></div><div class="catalog-info"><span class="catalog-cat">Try Now</span><h3>Find Your Dress</h3></div></a>
+  </div>
+</main>
+<%- include('partials/footer') %>
+<%- include('partials/end') %>

@@ -1,0 +1,11 @@
+<%- include('partials/head', { pageTitle: 'Signing in… | HERSTYLE' }) %>
+<div class="flex min-h-screen items-center justify-center bg-[#fafafa] font-sans text-gray-700">
+  <p class="text-sm font-medium">Signing you in…</p>
+</div>
+<script>
+const token = <%- JSON.stringify(token) %>;
+const redirect = <%- JSON.stringify(redirect) %>;
+if (token) localStorage.setItem('herstyle_jwt', token);
+window.location.replace(redirect || '/profile');
+</script>
+<%- include('partials/end') %>

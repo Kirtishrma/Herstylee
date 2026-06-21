@@ -1,0 +1,78 @@
+.collection-hero .hero-tag {
+  display: inline-block;
+  letter-spacing: 0.25em;
+  font-size: 0.75rem;
+  color: #e4d1a8;
+  text-transform: uppercase;
+}
+
+.collection-hero .hero-btn {
+  display: inline-block;
+  margin-top: 28px;
+  padding: 14px 36px;
+  background: #c9a96e;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 50px;
+  font-weight: 600;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.collection-hero .hero-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.collection-hero {
+  min-height: 72vh;
+  margin-top: 88px;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 60px 8%;
+}
+
+.collection-hero .hero-content {
+  color: #fff;
+  max-width: 720px;
+}
+
+.collection-hero h1 {
+  font-size: clamp(2.25rem, 5vw, 4rem);
+  color: #fff;
+  margin: 16px 0 20px;
+}
+
+.collection-hero p {
+  font-size: 1.05rem;
+  line-height: 1.8;
+  opacity: 0.95;
+}
+
+.collection-products {
+  padding-bottom: 64px;
+}
+
+.collection-products .section-heading {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+/* product grid uses .catalog-grid from app-pages.css */
+
+.empty-state {
+  text-align: center;
+  max-width: 520px;
+  margin: 0 auto;
+  color: #666;
+  line-height: 1.7;
+}
+
+.empty-state a {
+  color: #111;
+  font-weight: 600;
+}

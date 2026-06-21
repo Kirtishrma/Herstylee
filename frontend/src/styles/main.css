@@ -1,0 +1,55 @@
+/* Legacy styles — must come BEFORE @tailwind directives */
+@import "./legacy/main.css";
+@import "./legacy/app-pages.css";
+@import "./legacy/auth.css";
+@import "./legacy/shop.css";
+@import "./legacy/home.css";
+@import "./legacy/collection.css";
+@import "./legacy/product-detail.css";
+@import "./legacy/profile.css";
+@import "./legacy/stylist.css";
+@import "./legacy/admin.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply scroll-smooth;
+  }
+
+  body {
+    @apply bg-[#fafafa] text-brand-dark font-sans antialiased overflow-x-hidden;
+  }
+
+  h1, h2, h3, h4 {
+    @apply font-serif;
+  }
+}
+
+@layer components {
+  .hs-btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition-all duration-200;
+  }
+
+  .hs-btn-primary {
+    @apply hs-btn bg-brand-dark text-white hover:bg-brand-gold hover:text-brand-dark;
+  }
+
+  .hs-btn-outline {
+    @apply hs-btn border border-gray-300 bg-white text-gray-800 hover:border-brand-gold hover:text-brand-gold;
+  }
+
+  .hs-input {
+    @apply w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20;
+  }
+
+  .hs-card {
+    @apply rounded-2xl border border-gray-100 bg-white shadow-soft;
+  }
+
+  .hs-badge {
+    @apply ml-1 inline-flex min-w-[18px] items-center justify-center rounded-full bg-brand-gold px-1.5 text-[10px] font-bold text-brand-dark;
+  }
+}

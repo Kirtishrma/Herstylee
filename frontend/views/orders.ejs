@@ -1,0 +1,250 @@
+<%- include('partials/head', { pageTitle: 'My Orders | HERSTYLE' }) %>
+<%- include('partials/header') %>
+<main class="page-shell">
+  <nav class="page-breadcrumb">
+    <a href="/">Home</a><span>/</span><span>Orders</span>
+  </nav>
+  <header class="page-head">
+    <span class="page-tag">Account</span>
+    <h1>My Orders</h1>
+    <p class="page-sub">Track your purchases and delivery status.</p>
+  </header>
+  <% if (typeof query !== 'undefined' && query.success) { %>
+  <div class="alert-success">Order placed successfully! Thank you for shopping with HERSTYLE.</div>
+  <% } %>
+  <div id="ordersContent"><p style="color:#888;">Loading orders...</p></div>
+</main>
+<%- include('partials/footer') %>
+<script src="/js/app.js"></script>
+<script>
+function escapeHtml(text) {
+  const d = document.createElement('div');
+  d.textContent = text ?? '';
+  return d.innerHTML;
+}
+
+function trackSteps(status) {
+  const steps = ['confirmed','shipped','delivered'];
+  const idx = steps.indexOf(status);
+  return steps.map((s, i) =>
+    `<li class="${i <= idx ? 'done' : ''}">${s.charAt(0).toUpperCase()+s.slice(1)}</li>`
+  ).join('');
+}
+
+function canCancelOrder(order) {
+  return !['shipped', 'delivered', 'cancelled'].includes(order.status);
+}
+
+function renderOrderItems(items) {
+  return `<div class="order-items">${items.map(i => {
+    const lineTotal = (i.price || 0) * (i.quantity || 1);
+    const img = i.image || '/images/casual/c1.jpg';
+    return `
+      <div class="order-item-row">
+        <img src="${escapeHtml(img)}" alt="${escapeHtml(i.name)}" class="order-item-img" loading="lazy">
+        <div class="order-item-info">
+          <h4>${escapeHtml(i.name)}</h4>
+          <p class="order-item-meta">Size ${escapeHtml(i.size || 'M')} · Qty ${i.quantity || 1}</p>
+        </div>
+        <div class="order-item-price">
+          ₹${lineTotal.toLocaleString('en-IN')}
+          <small>₹${(i.price || 0).toLocaleString('en-IN')} each</small>
+        </div>
+      </div>`;
+  }).join('')}</div>`;
+}
+
+function renderOrderSummary(order) {
+  const subtotal = order.subtotal ?? order.items.reduce((s, i) => s + i.price * i.quantity, 0);
+  const discountRow = order.discount
+    ? `<div class="order-summary-row discount"><span>${escapeHtml(order.couponCode || 'Discount')}</span><span>-₹${order.discount.toLocaleString('en-IN')}</span></div>`
+    : '';
+  const usdRow = order.totalUsd
+    ? `<div class="order-summary-row"><span>Paid (USD)</span><span>$${order.totalUsd.toFixed(2)}</span></div>`
+    : '';
+
+  return `<div class="order-summary">
+    <div class="order-summary-row"><span>Subtotal</span><span>₹${subtotal.toLocaleString('en-IN')}</span></div>
+    ${discountRow}
+    ${usdRow}
+    <div class="order-summary-row"><span>Total</span><span>₹${order.total.toLocaleString('en-IN')}</span></div>
+  </div>`;
+}
+
+function receiptImageUrl(path) {
+  const img = path || '/images/casual/c1.jpg';
+  if (img.startsWith('http://') || img.startsWith('https://')) return img;
+  return window.location.origin + (img.startsWith('/') ? img : '/' + img);
+}
+
+function buildReceiptHtml(order) {
+  const orderRef = order.id.slice(-6).toUpperCase();
+  const dateStr = new Date(order.createdAt).toLocaleString('en-IN');
+  const itemRows = order.items.map(i => {
+    const line = (i.price || 0) * (i.quantity || 1);
+    const imgUrl = receiptImageUrl(i.image);
+    return `<tr>
+      <td style="padding:14px 0;border-bottom:1px solid #eee;vertical-align:middle;">
+        <div style="display:flex;align-items:center;gap:14px;">
+          <img src="${escapeHtml(imgUrl)}" alt="${escapeHtml(i.name)}" width="56" height="72" style="width:56px;height:72px;object-fit:cover;border-radius:8px;border:1px solid #eee;flex-shrink:0;background:#f5f5f5;">
+          <div>
+            <strong style="display:block;font-size:14px;color:#111;margin-bottom:4px;">${escapeHtml(i.name)}</strong>
+            <span style="color:#888;font-size:12px;">Size ${escapeHtml(i.size || 'M')} · Qty ${i.quantity}</span>
+          </div>
+        </div>
+      </td>
+      <td style="padding:14px 0;border-bottom:1px solid #eee;text-align:right;vertical-align:middle;font-size:14px;font-weight:600;white-space:nowrap;">₹${line.toLocaleString('en-IN')}</td>
+    </tr>`;
+  }).join('');
+
+  const subtotal = order.subtotal ?? order.items.reduce((s, i) => s + i.price * i.quantity, 0);
+  const discountHtml = order.discount
+    ? `<p style="text-align:right;color:#2e7d32;margin:4px 0;">${escapeHtml(order.couponCode || 'Discount')}: -₹${order.discount.toLocaleString('en-IN')}</p>`
+    : '';
+  const usdHtml = order.totalUsd ? `<p style="text-align:right;color:#666;margin:4px 0;">Paid: $${order.totalUsd.toFixed(2)} USD</p>` : '';
+  const printScript = `<script>
+window.onload=function(){
+  var imgs=document.images, n=imgs.length, done=0;
+  if(!n){window.print();return;}
+  function tryPrint(){
+    done++;
+    if(done>=n) setTimeout(function(){window.print();}, 150);
+  }
+  for(var i=0;i<n;i++){
+    if(imgs[i].complete) tryPrint();
+    else { imgs[i].onload=tryPrint; imgs[i].onerror=tryPrint; }
+  }
+};
+<\/script>`;
+
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Invoice #${orderRef}</title>
+  <style>
+    body{font-family:Georgia,serif;padding:40px;color:#111;max-width:640px;margin:0 auto}
+    h1{letter-spacing:0.15em;color:#c9a96e;font-size:24px;margin:0 0 4px}
+    .sub{color:#888;font-size:13px;margin-bottom:24px}
+    table{width:100%;border-collapse:collapse;margin:20px 0}
+    th{text-align:left;font-size:11px;text-transform:uppercase;color:#888;padding-bottom:8px;border-bottom:2px solid #111}
+    th:last-child{text-align:right}
+    .total{font-size:20px;font-weight:bold;text-align:right;margin-top:8px}
+    .ship{margin-top:24px;padding-top:16px;border-top:1px solid #eee;font-size:14px;line-height:1.6}
+    @media print{body{padding:20px}}
+  </style></head><body>
+    <h1>HERSTYLE</h1>
+    <p class="sub">Tax Invoice · #${orderRef}</p>
+    <p style="font-size:14px;color:#555;margin:0 0 4px;">Date: ${dateStr}</p>
+    <p style="font-size:14px;color:#555;margin:0 0 4px;">Status: ${escapeHtml(order.status)}</p>
+    <table>
+      <thead><tr><th>Item</th><th>Amount</th></tr></thead>
+      <tbody>${itemRows}</tbody>
+    </table>
+    <p style="text-align:right;margin:0;">Subtotal: ₹${subtotal.toLocaleString('en-IN')}</p>
+    ${discountHtml}
+    <p class="total">Total: ₹${order.total.toLocaleString('en-IN')}</p>
+    ${usdHtml}
+    <div class="ship">
+      <strong>Shipped to</strong><br>
+      ${escapeHtml(order.shipping.fullname)}<br>
+      ${escapeHtml(order.shipping.address)}<br>
+      ${escapeHtml(order.shipping.city)} ${escapeHtml(order.shipping.pincode)}<br>
+      ${escapeHtml(order.shipping.phone)}
+    </div>
+    <p style="margin-top:28px;font-size:12px;color:#999;text-align:center;">Thank you for shopping with HERSTYLE</p>
+    ${printScript}
+  </body></html>`;
+}
+
+function printReceipt(order) {
+  const html = buildReceiptHtml(order);
+  const win = window.open('', '_blank', 'width=720,height=900');
+  if (!win) {
+    showToast('Please allow pop-ups to print receipt', 'error');
+    return;
+  }
+  win.document.write(html);
+  win.document.close();
+}
+
+async function cancelOrder(orderId, btn) {
+  if (!confirm('Cancel this order? This cannot be undone.')) return;
+  btn.disabled = true;
+  btn.textContent = 'Cancelling...';
+  try {
+    const res = await authFetch('/api/orders/' + orderId + '/cancel', { method: 'POST' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Could not cancel order');
+    showToast(data.message, 'success');
+    loadOrders();
+  } catch (err) {
+    showToast(err.message, 'error');
+    btn.disabled = false;
+    btn.textContent = 'Cancel Order';
+  }
+}
+
+async function loadOrders() {
+  const el = document.getElementById('ordersContent');
+  const params = new URLSearchParams(location.search);
+  const sessionId = params.get('session_id');
+
+  if (sessionId) {
+    try {
+      let verifyRes;
+      if (getToken()) {
+        verifyRes = await authFetch('/api/payments/verify-session?session_id=' + encodeURIComponent(sessionId));
+      } else {
+        verifyRes = await fetch(apiUrl('/api/guest/payments/verify-session?session_id=' + encodeURIComponent(sessionId)));
+      }
+      const verifyData = await verifyRes.json();
+      if (verifyData.token) {
+        localStorage.setItem('herstyle_jwt', verifyData.token);
+      }
+      if (verifyData.paid && typeof clearGuestCart === 'function') {
+        clearGuestCart();
+      }
+    } catch (_) {}
+  }
+
+  if (!getToken()) {
+    el.innerHTML = '<div class="empty-state"><p>Please <a href="/login">login</a> to view orders.</p></div>';
+    return;
+  }
+
+  const res = await authFetch('/api/orders');
+  const orders = await res.json();
+  if (!orders.length) {
+    el.innerHTML = '<div class="empty-state"><p>No orders yet.</p><a href="/search">Start shopping →</a></div>';
+    return;
+  }
+
+  window.__ordersCache = orders;
+
+  el.innerHTML = orders.map((o, index) => {
+    const statusClass = `order-status ${o.status}`;
+    const cancelBtn = canCancelOrder(o)
+      ? `<button type="button" class="order-cancel-btn" onclick="cancelOrder('${o.id}', this)">Cancel Order</button>`
+      : '';
+
+    return `
+    <div class="order-card">
+      <div class="order-header">
+        <div>
+          <strong>Order #${o.id.slice(-6).toUpperCase()}</strong>
+          <p class="order-meta" style="margin-top:4px;">${new Date(o.createdAt).toLocaleString('en-IN')}</p>
+        </div>
+        <span class="${statusClass}">${o.status}</span>
+      </div>
+      ${o.status !== 'cancelled' ? `<ul class="order-track">${trackSteps(o.status)}</ul>` : ''}
+      ${renderOrderItems(o.items)}
+      ${renderOrderSummary(o)}
+      ${o.trackingId ? `<div class="tracking-box"><strong>${escapeHtml(o.trackingCarrier || 'Courier')}</strong> · Tracking: <strong>${escapeHtml(o.trackingId)}</strong>${o.shippedAt ? `<br><small>Shipped ${new Date(o.shippedAt).toLocaleDateString('en-IN')}</small>` : ''}</div>` : ''}
+      <p class="order-meta"><strong>Ship to:</strong> ${escapeHtml(o.shipping.fullname)}, ${escapeHtml(o.shipping.address)}, ${escapeHtml(o.shipping.city)} ${escapeHtml(o.shipping.pincode)} · ${escapeHtml(o.shipping.phone)}</p>
+      <div class="order-actions">
+        <button type="button" class="order-print-btn" onclick="printReceipt(window.__ordersCache[${index}])">Print Receipt</button>
+        ${cancelBtn}
+      </div>
+    </div>`;
+  }).join('');
+}
+loadOrders();
+</script>
+<%- include('partials/end') %>

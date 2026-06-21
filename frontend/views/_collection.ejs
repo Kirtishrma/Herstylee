@@ -1,0 +1,48 @@
+<%- include('partials/head', { pageTitle: title + ' | HERSTYLE' }) %>
+<%- include('partials/header') %>
+
+<section class="collection-hero" style="background-image: linear-gradient(rgba(0,0,0,.45), rgba(0,0,0,.45)), url('<%= heroUrl %>');">
+  <div class="hero-content">
+    <span class="hero-tag"><%= tag %></span>
+    <h1><%= heading %></h1>
+    <p><%= description %></p>
+    <% if (products.length) { %>
+    <a href="#products" class="hero-btn">Explore Collection</a>
+    <% } %>
+  </div>
+</section>
+
+<section class="collection-products page-shell" id="products" style="padding-top:64px;">
+  <nav class="page-breadcrumb">
+    <a href="/">Home</a><span>/</span><span><%= categoryLabel || category %></span>
+  </nav>
+  <header class="page-head">
+    <span class="page-tag"><%= tag %></span>
+    <h1><%= products.length ? 'All Pieces' : 'Coming Soon' %></h1>
+    <% if (products.length) { %>
+    <p class="page-sub"><%= products.length %> styles in this collection</p>
+    <% } %>
+  </header>
+
+  <% if (products.length) { %>
+  <div class="catalog-grid">
+    <% products.forEach(function(p) { %>
+    <a href="/product/<%= p.slug %>" class="catalog-card">
+      <div class="catalog-img-wrap"><img src="<%= p.image %>" alt="<%= p.name %>" loading="lazy"></div>
+      <div class="catalog-info">
+        <span class="catalog-cat"><%= p.category %></span>
+        <h3><%= p.name %></h3>
+        <p class="catalog-price">₹<%= p.price.toLocaleString('en-IN') %></p>
+      </div>
+    </a>
+    <% }); %>
+  </div>
+  <% } else { %>
+  <div class="empty-state">
+    <p>New pieces for this collection are on the way.</p>
+    <a href="/stylist">Ask Style Muse</a> · <a href="/search">Browse all dresses</a>
+  </div>
+  <% } %>
+</section>
+<%- include('partials/footer') %>
+<%- include('partials/end') %>

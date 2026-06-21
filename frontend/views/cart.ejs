@@ -1,0 +1,107 @@
+<%- include('partials/head', { pageTitle: 'Cart | HERSTYLE' }) %>
+<%- include('partials/header') %>
+<main class="page-shell">
+  <nav class="page-breadcrumb">
+    <a href="/">Home</a><span>/</span><span>Cart</span>
+  </nav>
+  <header class="page-head">
+    <span class="page-tag">Shopping</span>
+    <h1>Your Cart</h1>
+    <p class="page-sub">Review items before checkout — no login required.</p>
+  </header>
+  <div id="cartContent"></div>
+</main>
+<%- include('partials/footer') %>
+<script src="/js/app.js"></script>
+<script>
+document.getElementById('cartContent').addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-remove]');
+  if (btn) removeItem(btn.dataset.remove, btn.dataset.size);
+});
+
+function renderCartTable(data, isGuest) {
+  let rows = '';
+  data.items.forEach(item => {
+    rows += `<tr>
+      <td><a href="/product/${item.slug}"><img src="${item.image}" alt="">${item.name}</a></td>
+      <td><span class="size-badge">${item.size || 'M'}</span></td>
+      <td>₹${item.price.toLocaleString('en-IN')}</td>
+      <td><input type="number" min="1" value="${item.quantity}" style="width:60px;padding:8px;border:1px solid #eee;border-radius:8px;" onchange="updateQty('${item.productId}', '${item.size || 'M'}', this.value, ${isGuest})"></td>
+      <td>₹${item.subtotal.toLocaleString('en-IN')}</td>
+      <td><button type="button" class="btn-sm btn-outline" data-remove="${item.productId}" data-size="${item.size || 'M'}">Remove</button></td>
+    </tr>`;
+  });
+
+  const guestNote = isGuest
+    ? '<p class="cart-guest-note">Guest cart — checkout without creating an account.</p>'
+    : '';
+
+  return `<div class="cart-layout">
+    <div class="cart-table-wrap panel" style="padding:0;overflow:hidden;">
+      <table class="cart-table"><thead><tr><th>Product</th><th>Size</th><th>Price</th><th>Qty</th><th>Subtotal</th><th></th></tr></thead><tbody>${rows}</tbody></table>
+    </div>
+    <div class="cart-summary panel">
+      <h2 style="font-family:'Playfair Display',serif;font-size:1.25rem;margin-bottom:16px;">Order Summary</h2>
+      ${guestNote}
+      <p style="font-size:14px;color:#666;">${data.count} item(s)</p>
+      <p class="total">₹${data.total.toLocaleString('en-IN')}</p>
+      <a href="/checkout" class="btn-primary">Proceed to Checkout</a>
+      <a href="/search" style="display:block;text-align:center;margin-top:14px;font-size:14px;color:#666;">Continue shopping</a>
+    </div>
+  </div>`;
+}
+
+async function loadCart() {
+  const el = document.getElementById('cartContent');
+  el.innerHTML = skeletonCartHtml();
+
+  const isGuest = !getToken();
+  try {
+    let data;
+    if (isGuest) {
+      data = await fetchGuestCartSummary();
+    } else {
+      const res = await authFetch('/api/cart');
+      data = await res.json();
+    }
+
+    if (!data.items.length) {
+      el.innerHTML = '<div class="empty-state"><p>Your cart is empty.</p><a href="/search">Browse products →</a></div>';
+      return;
+    }
+    el.innerHTML = renderCartTable(data, isGuest);
+  } catch (e) {
+    el.innerHTML = `<div class="empty-state"><p>${e.message}</p></div>`;
+  }
+}
+
+async function updateQty(id, size, qty, isGuest) {
+  if (isGuest ?? !getToken()) {
+    updateGuestCartQty(id, size, Number(qty));
+  } else {
+    await authFetch(`/api/cart/${id}?size=${encodeURIComponent(size)}`, { method: 'PATCH', body: JSON.stringify({ quantity: Number(qty) }) });
+  }
+  loadCart();
+  updateNavBadges();
+}
+
+async function removeItem(id, size) {
+  try {
+    if (!getToken()) {
+      removeFromGuestCart(id, size || 'M');
+    } else {
+      const res = await authFetch(`/api/cart/${id}?size=${encodeURIComponent(size || 'M')}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Could not remove item');
+    }
+    await loadCart();
+    updateNavBadges();
+    showToast('Item removed from cart', 'success');
+  } catch (e) {
+    showToast(e.message || 'Failed to remove item', 'error');
+  }
+}
+
+loadCart();
+</script>
+<%- include('partials/end') %>

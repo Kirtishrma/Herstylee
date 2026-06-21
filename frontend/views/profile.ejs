@@ -1,0 +1,352 @@
+<%- include('partials/head', { pageTitle: 'My Profile | HERSTYLE' }) %>
+<%- include('partials/header') %>
+
+<main class="page-shell profile-page">
+  <nav class="page-breadcrumb">
+    <a href="/">Home</a><span>/</span><span>Profile</span>
+  </nav>
+
+  <section class="profile-hero">
+    <div class="profile-hero-inner">
+      <div class="profile-avatar" id="avatarInitial">?</div>
+      <div class="profile-hero-text">
+        <span class="page-tag">My Account</span>
+        <h1 id="profileName">My Account</h1>
+        <p id="profileEmail" class="profile-meta"></p>
+        <p id="memberSince" class="profile-meta profile-since"></p>
+      </div>
+    </div>
+    <div class="profile-hero-stats">
+      <a href="/orders" class="profile-stat-pill">Orders</a>
+      <a href="/wishlist" class="profile-stat-pill">Wishlist</a>
+      <a href="/cart" class="profile-stat-pill">Cart</a>
+    </div>
+  </section>
+
+  <div class="profile-layout">
+    <div class="profile-main">
+      <section class="profile-card">
+        <div class="profile-card-head">
+          <h2>Account Details</h2>
+          <p class="profile-card-desc">Update your name and contact number.</p>
+        </div>
+        <form id="profileForm" class="profile-form profile-form-grid">
+          <div class="profile-field">
+            <label>Full Name</label>
+            <input name="fullname" required>
+          </div>
+          <div class="profile-field">
+            <label>Email</label>
+            <input name="email" type="email" disabled>
+          </div>
+          <div class="profile-field profile-field-full">
+            <label>Phone</label>
+            <input name="phone" type="tel" placeholder="10-digit mobile number">
+          </div>
+          <div class="profile-form-footer profile-field-full">
+            <p id="profileMsg" class="profile-msg"></p>
+            <button type="submit" class="btn-save">Save Changes</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="profile-card profile-addresses-card">
+        <div class="profile-section-head">
+          <div>
+            <h2>Saved Addresses</h2>
+            <p class="profile-card-desc">Pick a saved address at checkout — add Home, Office, or more.</p>
+          </div>
+          <button type="button" class="btn-save btn-save-sm btn-save-outline" id="addAddressBtn">+ Add Address</button>
+        </div>
+        <div id="addressesList" class="addresses-list"></div>
+        <form id="addressForm" class="profile-form address-form is-hidden">
+          <h3 id="addressFormTitle" class="address-form-title">New Address</h3>
+          <input type="hidden" name="addressId" value="">
+          <div class="profile-form-grid">
+            <div class="profile-field">
+              <label>Label</label>
+              <input name="label" placeholder="Home, Office, etc." value="Home">
+            </div>
+            <div class="profile-field">
+              <label>Full Name</label>
+              <input name="fullname" required>
+            </div>
+            <div class="profile-field">
+              <label>Phone</label>
+              <input name="phone" type="tel" required>
+            </div>
+            <div class="profile-field">
+              <label>City</label>
+              <input name="city" required>
+            </div>
+            <div class="profile-field profile-field-full">
+              <label>Street Address</label>
+              <textarea name="address" rows="3" required placeholder="House no., street, landmark"></textarea>
+            </div>
+            <div class="profile-field">
+              <label>Pincode</label>
+              <input name="pincode" pattern="[0-9]{6}" required placeholder="6 digits">
+            </div>
+            <div class="profile-field profile-field-full">
+              <label class="address-default-label">
+                <input type="checkbox" name="isDefault"> Set as default address
+              </label>
+            </div>
+          </div>
+          <div class="address-form-actions">
+            <button type="submit" class="btn-save">Save Address</button>
+            <button type="button" class="btn-logout btn-logout-inline" id="cancelAddressBtn">Cancel</button>
+          </div>
+        </form>
+      </section>
+    </div>
+
+    <aside class="profile-sidebar">
+      <div class="profile-card profile-card-compact">
+        <h2>Quick Links</h2>
+        <nav class="profile-links">
+          <a href="/orders"><span class="profile-link-icon">📦</span> My Orders</a>
+          <a href="/wishlist"><span class="profile-link-icon">♡</span> Wishlist</a>
+          <a href="/cart"><span class="profile-link-icon">🛒</span> Shopping Cart</a>
+          <a href="/stylist"><span class="profile-link-icon">✨</span> Style Muse</a>
+        </nav>
+      </div>
+
+      <div class="profile-card profile-card-compact" id="passwordCard">
+        <h2>Change Password</h2>
+        <form id="passwordForm" class="profile-form">
+          <label>Current Password</label>
+          <input name="currentPassword" type="password" required>
+          <label>New Password</label>
+          <input name="newPassword" type="password" required minlength="6">
+          <button type="submit" class="btn-save btn-save-full">Update Password</button>
+        </form>
+      </div>
+
+      <div class="profile-card profile-card-compact profile-card-danger">
+        <h2>Session</h2>
+        <p class="profile-card-desc">Sign out from this device.</p>
+        <button type="button" id="logoutBtn" class="btn-logout">Logout</button>
+      </div>
+    </aside>
+  </div>
+</main>
+<%- include('partials/footer') %>
+<script src="/js/app.js"></script>
+<script>
+let profileUser = null;
+let addresses = [];
+
+function escapeHtml(text) {
+  const d = document.createElement('div');
+  d.textContent = text ?? '';
+  return d.innerHTML;
+}
+
+function renderAddresses() {
+  const el = document.getElementById('addressesList');
+  if (!addresses.length) {
+    el.innerHTML = `
+      <div class="addresses-empty">
+        <div class="addresses-empty-icon">📍</div>
+        <p><strong>No saved addresses yet</strong></p>
+        <p class="form-hint">Add your delivery address once — use it every checkout.</p>
+        <button type="button" class="btn-save btn-save-sm" onclick="openAddressForm(null)">Add your first address</button>
+      </div>`;
+    return;
+  }
+
+  el.innerHTML = addresses.map(addr => `
+    <article class="address-card ${addr.isDefault ? 'is-default' : ''}">
+      <div class="address-card-head">
+        <strong>${escapeHtml(addr.label || 'Home')}</strong>
+        ${addr.isDefault ? '<span class="address-default-badge">Default</span>' : ''}
+      </div>
+      <p class="address-card-body">
+        ${escapeHtml(addr.fullname)}<br>
+        ${escapeHtml(addr.address)}<br>
+        ${escapeHtml(addr.city)} ${escapeHtml(addr.pincode)}<br>
+        ${escapeHtml(addr.phone)}
+      </p>
+      <div class="address-card-actions">
+        ${!addr.isDefault ? `<button type="button" class="btn-sm btn-outline" data-default="${addr.id}">Make default</button>` : ''}
+        <button type="button" class="btn-sm btn-dark" data-edit="${addr.id}">Edit</button>
+        <button type="button" class="btn-sm btn-outline" data-delete="${addr.id}">Delete</button>
+      </div>
+    </article>
+  `).join('');
+
+  el.querySelectorAll('[data-default]').forEach(btn => {
+    btn.onclick = async () => {
+      const res = await authFetch('/api/profile/addresses/' + btn.dataset.default + '/default', { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) { showToast(data.error, 'error'); return; }
+      addresses = data.addresses;
+      renderAddresses();
+      showToast('Default address updated', 'success');
+    };
+  });
+
+  el.querySelectorAll('[data-edit]').forEach(btn => {
+    btn.onclick = () => {
+      const addr = addresses.find(a => a.id === btn.dataset.edit);
+      if (!addr) return;
+      openAddressForm(addr);
+    };
+  });
+
+  el.querySelectorAll('[data-delete]').forEach(btn => {
+    btn.onclick = async () => {
+      if (!confirm('Delete this address?')) return;
+      const res = await authFetch('/api/profile/addresses/' + btn.dataset.delete, { method: 'DELETE' });
+      const data = await res.json();
+      if (!res.ok) { showToast(data.error, 'error'); return; }
+      addresses = data.addresses;
+      renderAddresses();
+      showToast('Address removed', 'success');
+    };
+  });
+}
+
+function openAddressForm(addr) {
+  const form = document.getElementById('addressForm');
+  form.classList.remove('is-hidden');
+  document.getElementById('addressFormTitle').textContent = addr ? 'Edit Address' : 'New Address';
+  form.addressId.value = addr?.id || '';
+  form.label.value = addr?.label || 'Home';
+  form.fullname.value = addr?.fullname || profileUser?.fullname || '';
+  form.phone.value = addr?.phone || profileUser?.phone || '';
+  form.address.value = addr?.address || '';
+  form.city.value = addr?.city || '';
+  form.pincode.value = addr?.pincode || '';
+  form.isDefault.checked = Boolean(addr?.isDefault);
+  form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function closeAddressForm() {
+  document.getElementById('addressForm').classList.add('is-hidden');
+  document.getElementById('addressForm').reset();
+}
+
+async function loadProfile() {
+  const res = await authFetch('/api/profile');
+  const { user } = await res.json();
+  profileUser = user;
+  addresses = user.addresses || [];
+
+  document.getElementById('profileName').textContent = user.fullname;
+  document.getElementById('profileEmail').textContent = user.email;
+
+  const avatarEl = document.getElementById('avatarInitial');
+  if (user.avatar) {
+    avatarEl.innerHTML = `<img src="${user.avatar}" alt="" class="profile-avatar-img">`;
+  } else {
+    avatarEl.textContent = user.fullname.charAt(0).toUpperCase();
+  }
+
+  if (user.googleId && !user.hasPassword) {
+    document.getElementById('passwordCard').innerHTML =
+      '<h2>Sign-in Method</h2><p class="profile-card-desc">You signed in with Google. Use Google to log in.</p>';
+  }
+
+  if (user.memberSince) {
+    const date = new Date(user.memberSince).toLocaleDateString('en-IN', {
+      month: 'long', year: 'numeric'
+    });
+    document.getElementById('memberSince').textContent = `Member since ${date}`;
+  }
+
+  const form = document.getElementById('profileForm');
+  form.fullname.value = user.fullname;
+  form.email.value = user.email;
+  form.phone.value = user.phone || '';
+  renderAddresses();
+}
+
+document.getElementById('addAddressBtn').onclick = () => openAddressForm(null);
+document.getElementById('cancelAddressBtn').onclick = closeAddressForm;
+
+document.getElementById('addressForm').onsubmit = async (e) => {
+  e.preventDefault();
+  const form = e.target;
+  const payload = {
+    label: form.label.value.trim(),
+    fullname: form.fullname.value.trim(),
+    phone: form.phone.value.trim(),
+    address: form.address.value.trim(),
+    city: form.city.value.trim(),
+    pincode: form.pincode.value.trim(),
+    isDefault: form.isDefault.checked,
+  };
+  const id = form.addressId.value;
+  const url = id ? '/api/profile/addresses/' + id : '/api/profile/addresses';
+  const res = await authFetch(url, {
+    method: id ? 'PATCH' : 'POST',
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+  if (!res.ok) { showToast(data.error, 'error'); return; }
+  addresses = data.addresses;
+  renderAddresses();
+  closeAddressForm();
+  showToast(id ? 'Address updated' : 'Address saved', 'success');
+};
+
+document.getElementById('passwordForm').onsubmit = async (e) => {
+  e.preventDefault();
+  const f = e.target;
+  const res = await authFetch('/api/auth/change-password', {
+    method: 'POST',
+    body: JSON.stringify({
+      currentPassword: f.currentPassword.value,
+      newPassword: f.newPassword.value,
+    }),
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    showToast(data.error, 'error');
+    return;
+  }
+  showToast(data.message, 'success');
+  f.reset();
+};
+
+document.getElementById('profileForm').onsubmit = async (e) => {
+  e.preventDefault();
+  const form = e.target;
+  const msg = document.getElementById('profileMsg');
+  msg.textContent = '';
+  msg.className = 'profile-msg';
+
+  const res = await authFetch('/api/profile', {
+    method: 'PATCH',
+    body: JSON.stringify({
+      fullname: form.fullname.value.trim(),
+      phone: form.phone.value.trim(),
+    }),
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    msg.textContent = data.error;
+    msg.classList.add('error');
+    return;
+  }
+
+  profileUser = data.user;
+  showToast('Profile saved successfully', 'success');
+  document.getElementById('profileName').textContent = data.user.fullname;
+  if (!profileUser.avatar) {
+    document.getElementById('avatarInitial').textContent = data.user.fullname.charAt(0).toUpperCase();
+  }
+};
+
+document.getElementById('logoutBtn').onclick = async () => {
+  await fetch(apiUrl('/api/auth/logout'), { method: 'POST', credentials: 'include' });
+  localStorage.removeItem('herstyle_jwt');
+  window.location.href = '/login';
+};
+
+loadProfile();
+</script>
+<%- include('partials/end') %>

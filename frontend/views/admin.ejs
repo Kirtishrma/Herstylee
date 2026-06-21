@@ -1,0 +1,630 @@
+<%- include('partials/head', { pageTitle: 'Admin | HERSTYLE', bodyClass: 'admin-page', extraHead: '<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>' }) %>
+<%- include('partials/header') %>
+<main class="admin-shell">
+  <header class="admin-head">
+    <div>
+      <span class="page-tag">Control Center</span>
+      <h1>HERSTYLE Admin</h1>
+      <p class="page-sub">Orders · Products · Coupons — sab yahan se manage karo</p>
+    </div>
+    <a href="/" class="btn-sm btn-outline">← Store</a>
+  </header>
+
+  <div class="admin-stats" id="statsGrid">
+    <div class="stat-card"><span>Orders</span><strong id="statOrders">—</strong></div>
+    <div class="stat-card"><span>Revenue</span><strong id="statRevenue">—</strong></div>
+    <div class="stat-card"><span>Products</span><strong id="statProducts">—</strong></div>
+    <div class="stat-card accent"><span>To Ship</span><strong id="statShip">—</strong></div>
+  </div>
+
+  <nav class="admin-tabs">
+    <button type="button" class="admin-tab active" data-tab="dashboard">Dashboard</button>
+    <button type="button" class="admin-tab" data-tab="orders">Orders</button>
+    <button type="button" class="admin-tab" data-tab="products">Products</button>
+    <button type="button" class="admin-tab" data-tab="coupons">Coupons</button>
+  </nav>
+
+  <!-- DASHBOARD -->
+  <section class="admin-panel active" id="panel-dashboard">
+    <div class="panel-toolbar">
+      <h2>Sales Overview</h2>
+      <div class="chart-range-btns" id="chartRangeBtns">
+        <button type="button" class="chart-range-btn" data-days="7">7 Days</button>
+        <button type="button" class="chart-range-btn active" data-days="30">30 Days</button>
+        <button type="button" class="chart-range-btn" data-days="90">90 Days</button>
+      </div>
+    </div>
+
+    <div class="period-stats" id="periodStats">
+      <div class="period-stat"><span>Period Revenue</span><strong id="periodRevenue">—</strong></div>
+      <div class="period-stat"><span>Orders</span><strong id="periodOrders">—</strong></div>
+      <div class="period-stat"><span>Avg Order</span><strong id="periodAvg">—</strong></div>
+    </div>
+
+    <div class="chart-grid">
+      <div class="chart-card chart-card-wide">
+        <h3>Revenue Trend</h3>
+        <div class="chart-wrap"><canvas id="revenueChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>Orders by Status</h3>
+        <div class="chart-wrap chart-wrap-donut"><canvas id="statusChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>Sales by Category</h3>
+        <div class="chart-wrap"><canvas id="categoryChart"></canvas></div>
+      </div>
+      <div class="chart-card chart-card-wide">
+        <h3>Top Products</h3>
+        <div class="chart-wrap"><canvas id="topProductsChart"></canvas></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ORDERS -->
+  <section class="admin-panel" id="panel-orders">
+    <div class="panel-toolbar"><h2>Order Management</h2><button type="button" class="btn-sm btn-outline" onclick="loadOrders()">Refresh</button></div>
+    <div id="ordersTable" class="admin-table-wrap"><p class="muted">Loading orders...</p></div>
+  </section>
+
+  <!-- PRODUCTS -->
+  <section class="admin-panel" id="panel-products">
+    <div class="panel-toolbar">
+      <h2>Product Catalog</h2>
+      <div class="panel-toolbar-actions">
+        <button type="button" class="admin-btn admin-btn-primary" id="toggleProductFormBtn">+ Add Product</button>
+        <button type="button" class="btn-sm btn-outline" onclick="loadProducts()">Refresh</button>
+      </div>
+    </div>
+    <form id="productForm" class="admin-form panel product-form is-hidden">
+      <h3>Add New Product</h3>
+      <div class="form-row">
+        <input name="name" placeholder="Product name" required>
+        <select name="category" id="productCategorySelect" required>
+          <option value="">Choose collection</option>
+        </select>
+        <input name="price" type="number" placeholder="Price ₹" min="0" value="1999" required>
+        <input name="stock" type="number" placeholder="Stock" min="0" value="50" required>
+      </div>
+      <input name="image" placeholder="Image path e.g. casual/c1.jpg or https://..." required style="width:100%;margin-top:10px;">
+      <p class="form-hint">Image folder: <code>public/images/</code> — path likho jaise <code>casual/c1.jpg</code></p>
+      <div class="form-row" style="margin-top:12px;align-items:center;">
+        <label class="admin-toggle">
+          <input type="checkbox" name="active" checked>
+          <span class="admin-toggle-track"><span class="admin-toggle-thumb"></span></span>
+          <span class="admin-toggle-text">Live on store</span>
+        </label>
+        <button type="submit" class="admin-btn admin-btn-primary">Create Product</button>
+        <button type="button" class="admin-btn admin-btn-muted" id="cancelProductForm">Cancel</button>
+      </div>
+    </form>
+    <div id="productsTable" class="admin-table-wrap" style="margin-top:20px;"><p class="muted">Loading products...</p></div>
+  </section>
+
+  <!-- COUPONS -->
+  <section class="admin-panel" id="panel-coupons">
+    <div class="panel-toolbar"><h2>Coupon Codes</h2></div>
+    <form id="couponForm" class="admin-form panel">
+      <h3>Create New Coupon</h3>
+      <div class="form-row">
+        <input name="code" placeholder="CODE e.g. SALE20" required>
+        <select name="type"><option value="percent">Percent %</option><option value="fixed">Fixed ₹</option></select>
+        <input name="value" type="number" placeholder="Value" required min="1">
+        <input name="minOrder" type="number" placeholder="Min order ₹" min="0" value="0">
+        <input name="maxUses" type="number" placeholder="Max uses (optional)" min="1">
+        <input name="expiresAt" type="date">
+      </div>
+      <input name="description" placeholder="Description (shown at checkout)" style="width:100%;margin-top:10px;">
+      <button type="submit" class="admin-btn admin-btn-primary">+ Create Coupon</button>
+    </form>
+    <div id="couponsTable" class="admin-table-wrap" style="margin-top:20px;"><p class="muted">Loading coupons...</p></div>
+  </section>
+</main>
+<%- include('partials/footer') %>
+<script src="/js/app.js"></script>
+<script>
+const statuses = ['confirmed','shipped','delivered','cancelled'];
+let chartInstances = {};
+let analyticsDays = 30;
+
+const CHART_COLORS = {
+  gold: '#c9a96e',
+  goldLight: 'rgba(201, 169, 110, 0.15)',
+  black: '#111111',
+  green: '#2e7d32',
+  blue: '#1a56db',
+  purple: '#7b1fa2',
+  orange: '#e65100',
+  pink: '#c2185b',
+  gray: '#bdbdbd',
+};
+
+const STATUS_COLORS = {
+  confirmed: CHART_COLORS.gold,
+  shipped: CHART_COLORS.blue,
+  delivered: CHART_COLORS.green,
+  cancelled: CHART_COLORS.gray,
+  pending: '#9e9e9e',
+};
+
+function destroyCharts() {
+  Object.values(chartInstances).forEach(c => c?.destroy());
+  chartInstances = {};
+}
+
+function fmtInr(n) {
+  return '₹' + (n || 0).toLocaleString('en-IN');
+}
+
+async function loadAnalytics(days = analyticsDays) {
+  analyticsDays = days;
+  const res = await authFetch('/api/admin/analytics?days=' + days);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Analytics failed');
+
+  document.getElementById('periodRevenue').textContent = fmtInr(data.summary.periodRevenue);
+  document.getElementById('periodOrders').textContent = data.summary.periodOrders;
+  document.getElementById('periodAvg').textContent = fmtInr(data.summary.avgOrderValue);
+
+  destroyCharts();
+
+  const labels = data.daily.map(d => d.label);
+
+  chartInstances.revenue = new Chart(document.getElementById('revenueChart'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Revenue (₹)',
+        data: data.daily.map(d => d.revenue),
+        borderColor: CHART_COLORS.gold,
+        backgroundColor: CHART_COLORS.goldLight,
+        borderWidth: 2.5,
+        fill: true,
+        tension: 0.35,
+        pointRadius: data.daily.length <= 14 ? 4 : 0,
+        pointHoverRadius: 6,
+        pointBackgroundColor: CHART_COLORS.gold,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => ' ' + fmtInr(ctx.parsed.y),
+          },
+        },
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { maxTicksLimit: 10, font: { size: 11 } } },
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: v => '₹' + Number(v).toLocaleString('en-IN'),
+            font: { size: 11 },
+          },
+          grid: { color: '#f0f0f0' },
+        },
+      },
+    },
+  });
+
+  const statusLabels = data.statusBreakdown.map(s => s.status.charAt(0).toUpperCase() + s.status.slice(1));
+  chartInstances.status = new Chart(document.getElementById('statusChart'), {
+    type: 'doughnut',
+    data: {
+      labels: statusLabels,
+      datasets: [{
+        data: data.statusBreakdown.map(s => s.count),
+        backgroundColor: data.statusBreakdown.map(s => STATUS_COLORS[s.status] || CHART_COLORS.gray),
+        borderWidth: 0,
+        hoverOffset: 6,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '65%',
+      plugins: {
+        legend: { position: 'bottom', labels: { boxWidth: 12, padding: 14, font: { size: 11 } } },
+      },
+    },
+  });
+
+  const catPalette = [CHART_COLORS.gold, CHART_COLORS.black, CHART_COLORS.blue, CHART_COLORS.green, CHART_COLORS.purple, CHART_COLORS.orange, CHART_COLORS.pink, CHART_COLORS.gray];
+  chartInstances.category = new Chart(document.getElementById('categoryChart'), {
+    type: 'bar',
+    data: {
+      labels: data.categoryBreakdown.map(c => c.category),
+      datasets: [{
+        label: 'Revenue',
+        data: data.categoryBreakdown.map(c => c.revenue),
+        backgroundColor: data.categoryBreakdown.map((_, i) => catPalette[i % catPalette.length]),
+        borderRadius: 6,
+        borderSkipped: false,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      indexAxis: 'y',
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ' ' + fmtInr(ctx.parsed.x) } },
+      },
+      scales: {
+        x: {
+          beginAtZero: true,
+          ticks: { callback: v => '₹' + Number(v).toLocaleString('en-IN'), font: { size: 10 } },
+          grid: { color: '#f0f0f0' },
+        },
+        y: { grid: { display: false }, ticks: { font: { size: 11 } } },
+      },
+    },
+  });
+
+  const topNames = data.topProducts.map(p => p.name.length > 22 ? p.name.slice(0, 22) + '…' : p.name);
+  chartInstances.top = new Chart(document.getElementById('topProductsChart'), {
+    type: 'bar',
+    data: {
+      labels: topNames,
+      datasets: [
+        {
+          label: 'Revenue (₹)',
+          data: data.topProducts.map(p => p.revenue),
+          backgroundColor: CHART_COLORS.black,
+          borderRadius: 6,
+          borderSkipped: false,
+        },
+        {
+          label: 'Units Sold',
+          data: data.topProducts.map(p => p.quantity),
+          backgroundColor: CHART_COLORS.gold,
+          borderRadius: 6,
+          borderSkipped: false,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11 } } },
+        tooltip: {
+          callbacks: {
+            label(ctx) {
+              if (ctx.datasetIndex === 0) return ' Revenue: ' + fmtInr(ctx.parsed.y);
+              return ' Units: ' + ctx.parsed.y;
+            },
+          },
+        },
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 10 } } },
+        y: { beginAtZero: true, grid: { color: '#f0f0f0' }, ticks: { font: { size: 11 } } },
+      },
+    },
+  });
+}
+
+document.getElementById('chartRangeBtns').addEventListener('click', e => {
+  const btn = e.target.closest('.chart-range-btn');
+  if (!btn) return;
+  document.querySelectorAll('.chart-range-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  loadAnalytics(Number(btn.dataset.days)).catch(err => showToast(err.message, 'error'));
+});
+
+function toggleProductForm(show) {
+  const form = document.getElementById('productForm');
+  const btn = document.getElementById('toggleProductFormBtn');
+  const open = show ?? form.classList.contains('is-hidden');
+  form.classList.toggle('is-hidden', !open);
+  btn.textContent = open ? '− Close form' : '+ Add Product';
+  if (open) form.querySelector('[name=name]').focus();
+}
+
+document.getElementById('toggleProductFormBtn').onclick = () => toggleProductForm();
+document.getElementById('cancelProductForm').onclick = () => toggleProductForm(false);
+
+let adminCategories = [];
+
+function fillCategorySelect(categories) {
+  adminCategories = categories;
+  const sel = document.getElementById('productCategorySelect');
+  sel.innerHTML = '<option value="">Choose collection</option>';
+  categories.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c.value || c;
+    opt.textContent = c.title ? `${c.label} · ${c.title}` : (c.label || c);
+    sel.appendChild(opt);
+  });
+}
+
+function categoryOptionsHtml(selected) {
+  return adminCategories.map(c => {
+    const value = c.value || c;
+    const label = c.title ? `${c.label} · ${c.title}` : (c.label || c);
+    return `<option value="${value}" ${value === selected ? 'selected' : ''}>${label}</option>`;
+  }).join('');
+}
+
+document.querySelectorAll('.admin-tab').forEach(tab => {
+  tab.onclick = () => {
+    document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.admin-panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+  };
+});
+
+async function loadStats() {
+  const res = await authFetch('/api/admin/stats');
+  const s = await res.json();
+  document.getElementById('statOrders').textContent = s.totalOrders;
+  document.getElementById('statRevenue').textContent = '₹' + (s.revenue||0).toLocaleString('en-IN');
+  document.getElementById('statProducts').textContent = s.activeProducts;
+  document.getElementById('statShip').textContent = s.ordersToShip;
+}
+
+async function loadOrders() {
+  const el = document.getElementById('ordersTable');
+  const res = await authFetch('/api/admin/orders');
+  const orders = await res.json();
+  if (!orders.length) { el.innerHTML = '<p class="muted">No paid orders yet.</p>'; return; }
+
+  el.innerHTML = `<table class="admin-table"><thead><tr>
+    <th>Order</th><th>Customer</th><th>Total</th><th>Status</th><th>Tracking</th><th>Actions</th>
+  </tr></thead><tbody>${orders.map(o => `
+    <tr data-id="${o.id}">
+      <td><strong>#${o.id.slice(-6).toUpperCase()}</strong><br><small>${new Date(o.createdAt).toLocaleDateString('en-IN')}</small>${o.couponCode ? `<br><small class="coupon-tag">${o.couponCode}</small>` : ''}</td>
+      <td>${o.customer}<br><small>${o.email}</small></td>
+      <td>₹${o.total.toLocaleString('en-IN')}${o.discount ? `<br><small>-₹${o.discount} off</small>` : ''}</td>
+      <td><select class="status-select" data-id="${o.id}">${statuses.map(s => `<option value="${s}" ${o.status===s?'selected':''}>${s}</option>`).join('')}</select></td>
+      <td>
+        <input class="track-carrier" placeholder="Carrier" value="${o.trackingCarrier||''}" style="width:90px;margin-bottom:4px;">
+        <input class="track-id" placeholder="Tracking ID" value="${o.trackingId||''}">
+      </td>
+      <td>
+        <div class="admin-actions">
+          <button type="button" class="admin-btn admin-btn-primary save-order" data-id="${o.id}">Save</button>
+          <button type="button" class="admin-btn admin-btn-email resend-receipt" data-id="${o.id}">Resend email</button>
+        </div>
+      </td>
+    </tr>`).join('')}</tbody></table>`;
+
+  el.querySelectorAll('.save-order').forEach(btn => {
+    btn.onclick = async () => {
+      const id = btn.dataset.id;
+      const row = btn.closest('tr');
+      const res = await authFetch('/api/admin/orders/' + id, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          status: row.querySelector('.status-select').value,
+          trackingCarrier: row.querySelector('.track-carrier').value,
+          trackingId: row.querySelector('.track-id').value,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) { showToast(data.error, 'error'); return; }
+      const status = row.querySelector('.status-select').value;
+      const msg = status === 'shipped' ? 'Updated — shipped email sent!'
+        : status === 'delivered' ? 'Updated — delivered email sent!'
+        : 'Order updated';
+      showToast(msg, 'success');
+      loadStats();
+      loadAnalytics(analyticsDays).catch(() => {});
+    };
+  });
+
+  el.querySelectorAll('.resend-receipt').forEach(btn => {
+    btn.onclick = async () => {
+      btn.disabled = true;
+      btn.textContent = 'Sending...';
+      const res = await authFetch('/api/admin/orders/' + btn.dataset.id + '/resend-receipt', { method: 'POST' });
+      const data = await res.json();
+      btn.disabled = false;
+      btn.textContent = 'Resend email';
+      if (!res.ok) { showToast(data.error, 'error'); return; }
+      showToast(data.message || 'Email sent!', 'success');
+    };
+  });
+}
+
+async function loadProducts() {
+  const el = document.getElementById('productsTable');
+  const res = await authFetch('/api/admin/products');
+  const products = await res.json();
+  el.innerHTML = `<table class="admin-table admin-table-products"><thead><tr>
+    <th>Product</th><th>Category</th><th>Price</th><th>Stock</th><th>Status</th><th>Actions</th>
+  </tr></thead><tbody>${products.map(p => `
+    <tr data-id="${p.id}">
+      <td class="td-product">
+        <img src="${p.image}" class="admin-thumb" alt="">
+        <span class="product-name">${p.name}</span>
+      </td>
+      <td class="td-category">
+        <select class="p-category admin-select">${categoryOptionsHtml(p.category)}</select>
+      </td>
+      <td class="td-input">
+        <div class="admin-input-wrap">
+          <span class="admin-input-prefix">₹</span>
+          <input type="number" class="admin-input p-price" value="${p.price}" min="0" step="1">
+        </div>
+      </td>
+      <td class="td-input">
+        <div class="admin-input-wrap admin-input-wrap--stock ${p.stock <= 5 ? 'is-low' : ''}">
+          <input type="number" class="admin-input p-stock" value="${p.stock}" min="0" step="1">
+          <span class="admin-input-suffix">pcs</span>
+        </div>
+      </td>
+      <td>
+        <label class="admin-toggle">
+          <input type="checkbox" class="p-active" ${p.active ? 'checked' : ''}>
+          <span class="admin-toggle-track"><span class="admin-toggle-thumb"></span></span>
+          <span class="admin-toggle-text">${p.active ? 'Live' : 'Hidden'}</span>
+        </label>
+      </td>
+      <td>
+        <div class="admin-actions">
+          <button type="button" class="admin-btn admin-btn-primary save-product" data-id="${p.id}">Save</button>
+          <button type="button" class="admin-btn admin-btn-danger del-product" data-id="${p.id}" data-name="${p.name.replace(/"/g, '&quot;')}">Delete</button>
+        </div>
+      </td>
+    </tr>`).join('')}</tbody></table>`;
+
+  el.querySelectorAll('.p-active').forEach(cb => {
+    cb.onchange = () => {
+      const label = cb.closest('.admin-toggle');
+      const text = label.querySelector('.admin-toggle-text');
+      text.textContent = cb.checked ? 'Live' : 'Hidden';
+    };
+  });
+
+  el.querySelectorAll('.p-stock').forEach(input => {
+    input.oninput = () => {
+      const wrap = input.closest('.admin-input-wrap');
+      wrap.classList.toggle('is-low', Number(input.value) <= 5);
+    };
+  });
+
+  el.querySelectorAll('.save-product').forEach(btn => {
+    btn.onclick = async () => {
+      const row = btn.closest('tr');
+      const res = await authFetch('/api/admin/products/' + btn.dataset.id, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          price: Number(row.querySelector('.p-price').value),
+          stock: Number(row.querySelector('.p-stock').value),
+          active: row.querySelector('.p-active').checked,
+          category: row.querySelector('.p-category').value,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) { showToast(data.error, 'error'); return; }
+      showToast('Product saved', 'success');
+      loadStats();
+      loadAnalytics(analyticsDays).catch(() => {});
+    };
+  });
+
+  el.querySelectorAll('.del-product').forEach(btn => {
+    btn.onclick = async () => {
+      if (!confirm('Delete "' + btn.dataset.name + '"? This cannot be undone.')) return;
+      const res = await authFetch('/api/admin/products/' + btn.dataset.id, { method: 'DELETE' });
+      const data = await res.json();
+      if (!res.ok) { showToast(data.error, 'error'); return; }
+      showToast('Product deleted', 'success');
+      loadProducts();
+      loadStats();
+      loadAnalytics(analyticsDays).catch(() => {});
+    };
+  });
+}
+
+async function loadCoupons() {
+  const el = document.getElementById('couponsTable');
+  const res = await authFetch('/api/admin/coupons');
+  const coupons = await res.json();
+  if (!coupons.length) { el.innerHTML = '<p class="muted">No coupons yet.</p>'; return; }
+
+  el.innerHTML = `<table class="admin-table"><thead><tr>
+    <th>Code</th><th>Discount</th><th>Min Order</th><th>Used</th><th>Active</th><th></th>
+  </tr></thead><tbody>${coupons.map(c => `
+    <tr>
+      <td><strong>${c.code}</strong><br><small>${c.description||''}</small></td>
+      <td>${c.type==='percent'?c.value+'%':'₹'+c.value}</td>
+      <td>₹${c.minOrder.toLocaleString('en-IN')}</td>
+      <td>${c.usedCount}${c.maxUses?'/'+c.maxUses:''}</td>
+      <td><button type="button" class="admin-btn ${c.active ? 'admin-btn-success' : 'admin-btn-muted'} toggle-coupon" data-id="${c.id}" data-active="${c.active}">${c.active ? 'Active' : 'Inactive'}</button></td>
+      <td><button type="button" class="admin-btn admin-btn-danger del-coupon" data-id="${c.id}">Delete</button></td>
+    </tr>`).join('')}</tbody></table>`;
+
+  el.querySelectorAll('.toggle-coupon').forEach(btn => {
+    btn.onclick = async () => {
+      await authFetch('/api/admin/coupons/' + btn.dataset.id, {
+        method: 'PATCH',
+        body: JSON.stringify({ active: btn.dataset.active !== 'true' }),
+      });
+      loadCoupons();
+    };
+  });
+  el.querySelectorAll('.del-coupon').forEach(btn => {
+    btn.onclick = async () => {
+      if (!confirm('Delete this coupon?')) return;
+      await authFetch('/api/admin/coupons/' + btn.dataset.id, { method: 'DELETE' });
+      showToast('Coupon deleted', 'success');
+      loadCoupons();
+    };
+  });
+}
+
+document.getElementById('productForm').onsubmit = async (e) => {
+  e.preventDefault();
+  const f = e.target;
+  const res = await authFetch('/api/admin/products', {
+    method: 'POST',
+    body: JSON.stringify({
+      name: f.name.value,
+      category: f.category.value,
+      image: f.image.value,
+      price: Number(f.price.value),
+      stock: Number(f.stock.value),
+      active: f.active.checked,
+    }),
+  });
+  const data = await res.json();
+  if (!res.ok) { showToast(data.error, 'error'); return; }
+  showToast('Product created!', 'success');
+  f.reset();
+  f.active.checked = true;
+  toggleProductForm(false);
+  loadProducts();
+  loadStats();
+  loadAnalytics(analyticsDays).catch(() => {});
+};
+
+document.getElementById('couponForm').onsubmit = async (e) => {
+  e.preventDefault();
+  const f = e.target;
+  const res = await authFetch('/api/admin/coupons', {
+    method: 'POST',
+    body: JSON.stringify({
+      code: f.code.value,
+      type: f.type.value,
+      value: Number(f.value.value),
+      minOrder: Number(f.minOrder.value) || 0,
+      maxUses: f.maxUses.value ? Number(f.maxUses.value) : null,
+      expiresAt: f.expiresAt.value || null,
+      description: f.description.value,
+    }),
+  });
+  const data = await res.json();
+  if (!res.ok) { showToast(data.error, 'error'); return; }
+  showToast('Coupon created!', 'success');
+  f.reset();
+  loadCoupons();
+};
+
+async function init() {
+  if (!getToken()) { location.href = '/login?redirect=/admin'; return; }
+  try {
+    const catRes = await authFetch('/api/admin/categories');
+    fillCategorySelect(await catRes.json());
+    await loadStats();
+    await loadAnalytics();
+    await loadOrders();
+    await loadProducts();
+    await loadCoupons();
+  } catch (e) {
+    showToast(e.message || 'Admin access denied', 'error');
+    setTimeout(() => location.href = '/', 1500);
+  }
+}
+init();
+</script>
+<%- include('partials/end') %>
